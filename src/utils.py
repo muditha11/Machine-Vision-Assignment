@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .constants import classes
-
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
 
 def visualize_batch(batch):
     mean = (0.4914, 0.4822, 0.4465)
@@ -23,4 +24,23 @@ def visualize_batch(batch):
             axes[i, j].axis("off")
 
     plt.tight_layout()
+    plt.show()
+
+
+def plot_confusion_matrix(y, yhat):
+    cm = confusion_matrix(y, yhat)
+
+    # Plot confusion matrix using seaborn
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=np.unique(y),
+        yticklabels=np.unique(y),
+    )
+    plt.title("Confusion Matrix")
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
     plt.show()

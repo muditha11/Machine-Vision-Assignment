@@ -11,7 +11,7 @@ class ClassificationModel(nn.Module):
             for param in backbone.parameters():
                 param.requires_grad = False
 
-        elif mode == "enc_dec":
+        elif mode == "tune_dec":
             self.backbone.fc = nn.Sequential(
                 nn.Linear(2048, 1000), nn.ReLU(), nn.Dropout(p=0.5), nn.Linear(1000, 37)
             )
@@ -20,7 +20,7 @@ class ClassificationModel(nn.Module):
             for param in backbone.fc.parameters():
                 param.requires_grad = True
 
-        elif mode == "enc_dec_full":
+        elif mode == "tune_enc_dec":
             self.backbone.fc = nn.Sequential(
                 nn.Linear(2048, 1000), nn.ReLU(), nn.Dropout(p=0.5), nn.Linear(1000, 37)
             )
