@@ -17,7 +17,38 @@ class OxfordPetCustom(Dataset):
         )
         os.remove(os.path.join(pytorch_ds_root, "oxford-iiit-pet", "images.tar.gz"))
 
-    def __init__(self, root="./data/oxford-iiit-pet", split="train"):
+    def _save_split(self, lst, split, save_root):
+        with open(save_root + "/" + split + ".txt", "w") as file:
+            for item in lst:
+                file.write(f"{item}\n")
+
+    def _split_data(self, root, split_ratio):
+        ims = os.listdir(os.path.join(root, "images"))
+        train, val, test = [], [], []
+        for i in classes:
+            class_ims = []
+            for j in ims:
+                if j.startswith(i) and j.endswith(".jpg"):
+                    class_ims.append(j)
+            class_ims.sort()
+            t = int(len(class_ims) * split_ratio[0])
+            v = t + int(len(class_ims) * split_ratio[1])
+            train += class_ims[:t]
+            val += class_ims[t:v]
+            test += class_ims[v:]
+        save_root = os.path.join(root, "annotations/splits")
+
+        os.makedirs(save_root, exist_ok=True)
+        self._save_split(train, "train", save_root)
+        self._save_split(val, "val", save_root)
+        self._save_split(test, "test", save_root)
+
+    def __init__(
+        self,
+        root="./data/oxford-iiit-pet",
+        split="train",
+        split_ratio=[0.5, 0.25, 0.25],
+    ):
         assert root.endswith("oxford-iiit-pet")
 
         if split not in self.valid_splits:
@@ -26,6 +57,8 @@ class OxfordPetCustom(Dataset):
             )
         if not os.path.exists(root):
             self._download(root)
+
+        self._split_data(root, split_ratio)
 
         self.root = root
         self.split = split
@@ -65,28 +98,3 @@ class OxfordPetCustom(Dataset):
         else:
             tensor_image = self.transform_train(image)
         return tensor_image, label
-
-
-def save_split(my_list, split, save_root):
-    with open(save_root + "/" + split + ".txt", "w") as file:
-        for item in my_list:
-            file.write(f"{item}\n")
-
-
-def split_data(root, split=[0.7, 0.15, 0.15]):
-    ims = os.listdir(root)
-    train, val, test = [], [], []
-    for i in classes:
-        class_ims = []
-        for j in ims:
-            if j.startswith(i) and j.endswith(".jpg"):
-                class_ims.append(j)
-        t = int(len(class_ims) * split[0])
-        v = t + int(len(class_ims) * split[1])
-        train += class_ims[:t]
-        val += class_ims[t:v]
-        test += class_ims[v:]
-    save_root = r"./data/oxford-iiit-pet/annotations/splits"
-    save_split(train, "train", save_root), save_split(
-        val, "val", save_root
-    ), save_split(test, "test", save_root)
