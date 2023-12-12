@@ -55,9 +55,7 @@ class Classifier(nn.Module):
             )
             for layer in triplet
         ]
-        head_layers.extend(
-            [head_linear_layers[-1], nn.BatchNorm1d(head_dims[-1]), nn.Softmax()]
-        )
+        head_layers.extend([head_linear_layers[-1]])
         self.decoder = nn.Sequential(*head_layers)
 
     def __init__(

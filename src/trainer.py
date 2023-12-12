@@ -32,7 +32,7 @@ class Trainer:
                     ),
                 )
             self.val_dl: DataLoader = DataLoader(
-                val_ds, **dict(self.conf.train.loader_params)
+                val_ds, **dict(self.conf.val.loader_params)
             )
             self.do_val: bool = True
         else:

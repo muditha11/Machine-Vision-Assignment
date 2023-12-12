@@ -9,7 +9,7 @@ model:
     freeze: [.encoder]
     params:
         enc_name: ResNet50
-        drop_out: 0.5
+        drop_out: 0.1
         use_batch_norm: True
         head_inters: [1024]
 loss:
@@ -17,20 +17,21 @@ loss:
 optimizer:
     target: torch.optim.AdamW
     params:
-        lr: 1.0e-3
+        lr: 1.0e-4
         betas: [0.9, 0.999]
-        weight_decay: 1.0e-5
+        weight_decay: 1.0e-4
 lr_scheduler:
     target: torch.optim.lr_scheduler.CosineAnnealingLR
     params:
-        T_max: 20
+        T_max: 10
         eta_min: 3.0e-8
 train:
-    tollerance: 1
+    tollerance: 4
     loader_params:
-        batch_size: 16
+        batch_size: 128
         shuffle: True
+        num_workers: 8
 val:
     loader_params:
-        batch_size: 16
-epochs: 100
+        batch_size: 2048
+epochs: 15
