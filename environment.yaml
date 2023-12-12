@@ -11,3 +11,6 @@ dependencies:
           - torchvision
           - pandas
           - scikit-learn
+          - matplotlib
+          - seaborn
+          - tqdm

@@ -1,51 +1,66 @@
 import os
 from PIL import Image
 from torch.utils.data import Dataset
-from torchvision import datasets, transforms
-import pandas as pd
-from .constants import classes_label_map, mean, std, classes
+from torchvision import transforms
+from .constants import classes_label_map, classes, img_wh
+from torchvision.datasets import OxfordIIITPet
 
 
 class OxfordPetCustom(Dataset):
-    def __init__(self, main_dir, split):
-        self.main_dir = main_dir
+    valid_splits = ["train", "val", "test"]
+
+    def _download(self, root: str):
+        pytorch_ds_root = root.rstrip("oxford-iiit-pet")
+        OxfordIIITPet(pytorch_ds_root, download=True)
+        os.remove(
+            os.path.join(pytorch_ds_root, "oxford-iiit-pet", "annotations.tar.gz")
+        )
+        os.remove(os.path.join(pytorch_ds_root, "oxford-iiit-pet", "images.tar.gz"))
+
+    def __init__(self, root="./data/oxford-iiit-pet", split="train"):
+        assert root.endswith("oxford-iiit-pet")
+
+        if split not in self.valid_splits:
+            raise ValueError(
+                f"Invalid split definition. Valid splits are {self.valid_splits}"
+            )
+        if not os.path.exists(root):
+            self._download(root)
+
+        self.root = root
         self.split = split
 
-        with open(
-            "./data/oxford-iiit-pet/annotations/splits/" + split + ".txt", "r"
-        ) as file:
+        with open(f"{root}/annotations/splits/" + split + ".txt", "r") as file:
             read_list = [line.strip() for line in file.readlines()]
         self.imgs = read_list
 
         self.transform_train = transforms.Compose(
             [
-                transforms.Resize(128),
-                transforms.RandomCrop(128, padding=4),
+                transforms.RandomResizedCrop(img_wh[::-1], scale=[0.8, 1.0]),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize(mean, std),
             ]
         )
 
         self.transform_test = transforms.Compose(
             [
-                transforms.Resize(128),
+                transforms.Resize(img_wh[::-1]),
                 transforms.ToTensor(),
-                transforms.Normalize(mean, std),
             ]
         )
+        self.img_dir = os.path.join(root, "images")
 
     def __len__(self):
         return len(self.imgs)
 
     def __getitem__(self, idx):
-        img_loc = os.path.join(self.main_dir, self.imgs[idx])
+        img_loc = os.path.join(self.img_dir, self.imgs[idx])
         label = classes_label_map[
             "_".join(self.imgs[idx].split(".jpg")[0].split("_")[:-1])
         ]
 
         image = Image.open(img_loc).convert("RGB")
-        if self.split == "test":
+        if self.split in ["test", "val"]:
             tensor_image = self.transform_test(image)
         else:
             tensor_image = self.transform_train(image)
