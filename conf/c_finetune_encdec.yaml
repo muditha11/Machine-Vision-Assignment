@@ -9,6 +9,7 @@ model:
     params:
         enc_name: ResNet50
         drop_out: 0.5
+        use_batch_norm: True
         head_inters: []
 loss:
     target: src.costs.CrossEntropyLoss

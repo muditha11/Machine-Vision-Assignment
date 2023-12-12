@@ -41,19 +41,23 @@ class Classifier(nn.Module):
     head_starts = {"ResNet50": 2048}
     valid_encs = ["ResNet50"]
 
-    def _init_head(self, head_inters):
+    def _init_head(self, head_inters, use_batch_norm):
         head_dims = [self.head_starts[self.enc_name], *head_inters, self.head_end]
         head_linear_layers = [
             nn.Linear(head_dims[i], head_dims[i + 1]) for i in range(len(head_dims) - 1)
         ]
         head_layers = [
             layer
-            for pair in zip(
-                head_linear_layers, [nn.ReLU()] * (len(head_linear_layers) - 1)
+            for triplet in zip(
+                head_linear_layers,
+                [nn.BatchNorm1d(i) for i in head_dims[1:]],
+                [nn.ReLU()] * (len(head_linear_layers) - 1),
             )
-            for layer in pair
+            for layer in triplet
         ]
-        head_layers.extend([head_linear_layers[-1], nn.Softmax()])
+        head_layers.extend(
+            [head_linear_layers[-1], nn.BatchNorm1d(head_dims[-1]), nn.Softmax()]
+        )
         self.decoder = nn.Sequential(*head_layers)
 
     def __init__(
@@ -61,6 +65,7 @@ class Classifier(nn.Module):
         enc_name: str = "ResNet50",
         head_inters: Sequence[int] = [],
         drop_out: float = 0.2,
+        use_batch_norm: bool = False,
         device: int | str = 0,
     ) -> None:
         if enc_name not in self.valid_encs:
@@ -78,7 +83,7 @@ class Classifier(nn.Module):
             )
             self.encoder.fc = nn.Identity()
 
-        self._init_head(head_inters)
+        self._init_head(head_inters, use_batch_norm)
 
         self.to(device)
 
