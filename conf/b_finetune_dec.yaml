@@ -1,0 +1,9 @@
+params:
+  lr : 0.0001
+  batch_size : 64
+  train_per : 0.7
+  val_per : 0.15
+  device : cuda
+  weight_decay : 0.0001
+  t_max : 10
+  

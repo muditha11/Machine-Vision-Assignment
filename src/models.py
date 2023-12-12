@@ -2,7 +2,7 @@ import torch.nn as nn
 
 
 class ClassificationModel(nn.Module):
-    def __init__(self, backbone, mode="encoder"):
+    def __init__(self, backbone, mode="pretrained_encoder"):
         super().__init__()
         self.backbone = backbone
 
