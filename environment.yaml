@@ -1,0 +1,13 @@
+name: machine-vision
+channels:
+    - defaults
+dependencies:
+    - python=3.10
+    - pip=23.2.1
+    - pip:
+          - ipykernel
+          - ipywidgets
+          - torch
+          - torchvision
+          - pandas
+          - scikit-learn
