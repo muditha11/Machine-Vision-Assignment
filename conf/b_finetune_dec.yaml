@@ -36,4 +36,7 @@ val:
 test:
     loader_params:
         batch_size: 16
+    visualizer_params:
+        grid_size: 6
+        max_fig_count: 5
 epochs: 100
