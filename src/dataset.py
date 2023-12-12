@@ -6,7 +6,7 @@ from .constants import classes_label_map, classes, img_wh
 from torchvision.datasets import OxfordIIITPet
 
 
-class OxfordPetCustom(Dataset):
+class OxfordPet(Dataset):
     valid_splits = ["train", "val", "test"]
 
     def _download(self, root: str):
@@ -47,7 +47,7 @@ class OxfordPetCustom(Dataset):
         self,
         root="./data/oxford-iiit-pet",
         split="train",
-        split_ratio=[0.5, 0.25, 0.25],
+        split_ratio=[0.7, 0.15, 0.15],
     ):
         assert root.endswith("oxford-iiit-pet")
 

@@ -3,55 +3,56 @@ import matplotlib.pyplot as plt
 from .constants import classes
 from sklearn.metrics import confusion_matrix
 import seaborn as sns
+import importlib
+from omegaconf import OmegaConf
+from typing import Any
+from torch.utils.tensorboard import SummaryWriter
+import logging
 
-# from torch.utils.tensorboard import SummaryWriter
-# import logging
-# import importlib
 
+class Logger:
+    def __init__(self) -> None:
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.root.level)
+        self.display_info = self.logger.level <= logging.INFO
+        self.plotter = None
+        self.data = {}
 
-# class Logger:
-#     def __init__(self) -> None:
-#         self.logger = logging.getLogger()
-#         self.logger.setLevel(logging.root.level)
-#         self.display_info = self.logger.level <= logging.INFO
-#         self.plotter = None
-#         self.data = {}
+    # logging
+    def info(self, txt: str) -> None:
+        self.logger.info(txt)
 
-#     # logging
-#     def info(self, txt: str) -> None:
-#         self.logger.info(txt)
+    def warn(self, txt: str) -> None:
+        self.logger.warn(txt)
 
-#     def warn(self, txt: str) -> None:
-#         self.logger.warn(txt)
+    def error(self, txt: str) -> None:
+        self.logger.error(txt)
 
-#     def error(self, txt: str) -> None:
-#         self.logger.error(txt)
+    # plotting
+    def init_plotter(self, logdir):
+        self.plotter = SummaryWriter(logdir)
 
-#     # plotting
-#     def init_plotter(self, logdir):
-#         self.plotter = SummaryWriter(logdir)
+    def step(self, epoch):
+        for k, v in self.data.items():
+            v = [val for val in v if val is not None]
+            if len(v) != 0:
+                self.plotter.add_scalar(k, sum(v) / len(v), epoch)
+        self.data = dict()
 
-#     def step(self, epoch):
-#         for k, v in self.data.items():
-#             v = [val for val in v if val is not None]
-#             if len(v) != 0:
-#                 self.plotter.add_scalar(k, sum(v) / len(v), epoch)
-#         self.data = dict()
+    def _accumulate(self, name, y):
+        if name in self.data.keys():
+            self.data[name].append(y)
+        else:
+            self.data[name] = [y]
 
-#     def _accumulate(self, name, y):
-#         if name in self.data.keys():
-#             self.data[name].append(y)
-#         else:
-#             self.data[name] = [y]
+    def accumulate_train_loss(self, y) -> None:
+        self._accumulate("Loss/train", y)
 
-#     def accumulate_train_loss(self, y) -> None:
-#         self._accumulate("Loss/train", y)
+    def accumulate_val_loss(self, y) -> None:
+        self._accumulate("Loss/validation", y)
 
-#     def accumulate_val_loss(self, y) -> None:
-#         self._accumulate("Loss/validation", y)
-
-#     def accumulate_analysis(self, name, y) -> None:
-#         self._accumulate(f"Analysis/{name}", y)
+    def accumulate_analysis(self, name, y) -> None:
+        self._accumulate(f"Analysis/{name}", y)
 
 
 def visualize_batch(batch):
@@ -93,28 +94,31 @@ def plot_confusion_matrix(y, yhat):
     plt.show()
 
 
-# def load_class(target):
-#     """loads a class using a target"""
-#     *module_name, class_name = target.split(".")
-#     module_name = ".".join(module_name)
-#     module = importlib.import_module(module_name)
-#     cls = getattr(module, class_name)
-#     return cls
+def load_module(target):
+    """loads a class using a target"""
+    *module_name, class_name = target.split(".")
+    module_name = ".".join(module_name)
+    module = importlib.import_module(module_name)
+    obj = getattr(module, class_name)
+    return obj
 
 
-# # loads scientific notations as float
-# yaml_loader = yaml.SafeLoader
-# yaml_loader.add_implicit_resolver(
-#     "tag:yaml.org,2002:float",
-#     re.compile(
-#         """^(?:
-#      [-+]?(?:[0-9][0-9_]*)\\.[0-9_]*(?:[eE][-+]?[0-9]+)?
-#     |[-+]?(?:[0-9][0-9_]*)(?:[eE][-+]?[0-9]+)
-#     |\\.[0-9_]+(?:[eE][-+][0-9]+)?
-#     |[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*
-#     |[-+]?\\.(?:inf|Inf|INF)
-#     |\\.(?:nan|NaN|NAN))$""",
-#         re.X,
-#     ),
-#     list("-+0123456789."),
-# )
+def init_obj_from_conf(conf: OmegaConf, **kwargs) -> Any:
+    cls = load_module(conf.target)
+    if "params" in conf:
+        params = {**dict(conf.params), **kwargs}
+    else:
+        params = kwargs
+    obj = cls(**params)
+    return obj
+
+
+def get_nested_attr(obj, keys):
+    if type(keys) == str:
+        keys = keys.strip(".").split(".")
+
+    new_obj = getattr(obj, keys[0])
+    if len(keys) == 1:
+        return new_obj
+    else:
+        return get_nested_attr(new_obj, keys[1:])
