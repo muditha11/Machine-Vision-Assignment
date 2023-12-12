@@ -126,7 +126,7 @@ class Trainer:
         os.makedirs(os.path.join(out_dir, "ckpts"))
         self.logger.init_plotter(out_dir)
         with open(os.path.join(out_dir, "configuration.yaml"), "w") as handler:
-            yaml.dump(OmegaConf.to_container(self.conf))
+            yaml.dump(OmegaConf.to_container(self.conf), handler)
 
         return out_dir
 

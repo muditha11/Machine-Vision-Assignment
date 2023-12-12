@@ -32,4 +32,10 @@ train:
 val:
     loader_params:
         batch_size: 2048
-epochs: 15
+test:
+    loader_params:
+        batch_size: 2048
+    visualizer_params:
+        grid_size: 6
+        max_fig_count: 5
+epochs: 100

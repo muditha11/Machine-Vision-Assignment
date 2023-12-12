@@ -75,11 +75,11 @@ def visualize_batch(batch):
     plt.show()
 
 
-def plot_confusion_matrix(y, yhat):
+def plot_confusion_matrix(y: np.array, yhat: np.array, save_path: str = None) -> None:
     cm = confusion_matrix(y, yhat)
 
     # Plot confusion matrix using seaborn
-    plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(8, 6))
     sns.heatmap(
         cm,
         annot=True,
@@ -91,7 +91,12 @@ def plot_confusion_matrix(y, yhat):
     plt.title("Confusion Matrix")
     plt.xlabel("Predicted")
     plt.ylabel("True")
-    plt.show()
+
+    if save_path is None:
+        plt.show()
+    else:
+        plt.close()
+        fig.savefig(save_path)
 
 
 def load_module(target):

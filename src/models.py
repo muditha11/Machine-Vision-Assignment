@@ -91,3 +91,8 @@ class Classifier(nn.Module):
         embs = self.encoder(imgs)
         logits = self.decoder(embs)
         return {"logits": logits}
+
+    def load_weights(self, weights_path: str) -> None:
+        conf = torch.load(weights_path)
+        sd = conf["state"]["model"]
+        self.load_state_dict(sd)
